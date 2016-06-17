@@ -11,15 +11,23 @@ typedef State* PState;
 
 class State{
 public:
+    typedef PointsVector::iterator iterator;
+
+    State(){};
     State(int num);
+    State(const State& other): points(other.points), number(other.number){};
+    ~State();
     void add_point(const Point& new_point);
     u_llong get_number();
     Point operator[](int i);
     u_int size();
+    iterator begin();
+    iterator end();
 
     friend bool operator<(const State& left, const State& right);
+    friend bool operator==(const State& left, const State& right);
 private:
-    PointsVector points;
+    PointsVector* points;
     u_llong number;
 };
 

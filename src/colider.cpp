@@ -4,10 +4,16 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 //State
-State::State(int num): number(num){}
+State::State(int num): number(num){
+    points = new PointsVector;
+}
+
+State::~State(){
+    delete points;
+}
 
 void State::add_point(const Point& new_point){
-    points.push_back(new_point);
+    points->push_back(new_point);
 }
 
 u_llong State::get_number(){
@@ -15,15 +21,27 @@ u_llong State::get_number(){
 }
 
 Point State::operator[](int i){
-    return points[i];
+    return points->at(i);
 }
 
 u_int State::size(){
-    return points.size();
+    return points->size();
+}
+
+State::iterator State::begin(){
+    return points->begin();
+}
+
+State::iterator State::end(){
+    return points->end();
 }
 
 bool operator<(const State& left, const State& right){
     return left.number < right.number;
+}
+
+bool operator==(const State& left, const State& right){
+    return left.number == right.number;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -39,6 +57,9 @@ void Colider::add_object(PObject obj){
 
 void Colider::colide_all(PObject obj){
     for (u_int i = 0; i < objects.size(); i++){
+        if (!obj->is_alive()){
+            continue;
+        }
         obj->colide(objects[i]);
     }
 }

@@ -66,6 +66,14 @@ public:
         return '&';
     }
 
+    Point get_dir(){
+        return dir;
+    }
+
+    void change_dir(const Point& new_dir){
+        dir = new_dir;
+    }
+
     void colide(PObject other);
     void colide(PHead other);
     void colide(PBody other){};
