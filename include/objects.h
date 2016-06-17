@@ -37,6 +37,10 @@ public:
     virtual void colide(PFood other)=0;
     virtual void colide(PWall other)=0;
 
+    void kill(){
+        alive = false;
+    }
+
     Point get_coord(){
         return coord;
     };

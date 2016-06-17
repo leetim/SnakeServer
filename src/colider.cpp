@@ -2,6 +2,33 @@
 
 using namespace std;
 
+////////////////////////////////////////////////////////////////////////////////
+//State
+State::State(int num): number(num){}
+
+void State::add_point(const Point& new_point){
+    points.push_back(new_point);
+}
+
+u_llong State::get_number(){
+    return number;
+}
+
+Point State::operator[](int i){
+    return points[i];
+}
+
+u_int State::size(){
+    return points.size();
+}
+
+bool operator<(State* left, State* right){
+    return left->number < right->number;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+//Colider
+
 PObject Colider::operator[](int i){
     return objects[i];
 }

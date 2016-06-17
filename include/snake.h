@@ -1,6 +1,7 @@
 #pragma once
 #include <objects.h>
 #include <colider.h>
+#include <set>
 
 class Snake{
 public:
