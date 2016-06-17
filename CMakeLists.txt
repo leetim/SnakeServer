@@ -14,7 +14,7 @@ LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
 
 SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY})
 
-set(USED_SOURCE src/main.cpp src/Point.cpp src/acts.cpp src/bot.cpp
+set(USED_SOURCE src/main.cpp src/Point.cpp src/colider.cpp src/bot.cpp
    src/client.cpp src/objects.cpp src/server.cpp src/snake.cpp)
 
 add_executable(main ${USED_SOURCE})

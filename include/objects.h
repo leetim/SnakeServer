@@ -13,6 +13,8 @@ typedef Head* PHead;
 typedef Body* PBody;
 typedef Food* PFood;
 typedef Wall* PWall;
+typedef unsigned int u_int;
+typedef unsigned long long u_llong;
 
 class Object{
 public:

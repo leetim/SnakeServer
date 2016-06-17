@@ -15,7 +15,7 @@ void Head::move(){
 }
 
 void Head::colide(PObject other){
-    if (other->coord != coord + dir){
+    if (other->coord != coord){
         return;
     }
     other->colide(this);
