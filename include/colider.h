@@ -2,8 +2,12 @@
 #include <objects.h>
 #include <vector>
 
+class State;
+class Colider;
+
 typedef std::vector<PObject> ObjVector;
-typedef std::vector<Points> PointsVector;
+typedef std::vector<Point> PointsVector;
+typedef State* PState;
 
 class State{
 public:
@@ -13,11 +17,11 @@ public:
     Point operator[](int i);
     u_int size();
 
-    friend bool operator<(State* left, State* right);
+    friend bool operator<(const State& left, const State& right);
 private:
     PointsVector points;
     u_llong number;
-}
+};
 
 class Colider{
 public:
@@ -28,4 +32,4 @@ public:
     u_int size();
 private:
     std::vector<PObject> objects;
-}
+};

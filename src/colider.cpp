@@ -22,8 +22,8 @@ u_int State::size(){
     return points.size();
 }
 
-bool operator<(State* left, State* right){
-    return left->number < right->number;
+bool operator<(const State& left, const State& right){
+    return left.number < right.number;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

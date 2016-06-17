@@ -3,6 +3,8 @@
 #include <colider.h>
 #include <set>
 
+typedef std::set<PState> StateSet;
+
 class Snake{
 public:
     static Colider colider;
@@ -18,4 +20,4 @@ public:
 private:
     ObjVector fragments;
     PHead head;
-}
+};
