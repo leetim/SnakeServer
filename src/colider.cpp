@@ -69,18 +69,11 @@ void Colider::colide_all(PObject obj){
     }
 }
 
-void Colider::clear_dead_food(){
-    vector<PFood> temp;
-    for (u_int i = 0; i < foods.size(); i++){
-        if (foods[i]->is_alive()){
-            temp.push_back(foods[i]);
-        }
-    }
-    foods = temp;
+void Colider::clear_food(){
+    foods.clear();
 }
 
 void Colider::clear_dead(){
-    clear_dead_food();
     vector<PObject> temp;
     for (u_int i = 0; i < objects.size(); i++){
         if (objects[i]->is_alive()){

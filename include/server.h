@@ -69,6 +69,7 @@ public:
     static u_int HEAR;
     static u_int SEND_NOW;
     static u_int END;
+    static u_int SEND_ALL_DIRS;
 
     static std::mutex obj_lock;
     static std::mutex talkers_lock;

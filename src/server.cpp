@@ -25,6 +25,7 @@ bool Talker::is_closed(){
 }
 
 void Talker::send_snake(PSnake snake){
+    m_socket.write_some(buffer(&Server::SEND_SNAKE, sizeof(u_int)));
     Server::obj_lock.lock();
     u_int length = (snake->size()+1)*2;
     int* buf = new int[length];
@@ -41,6 +42,7 @@ void Talker::send_snake(PSnake snake){
 }
 
 void Talker::send_food(PFood food){
+    m_socket.write_some(buffer(&Server::SEND_FOOD, sizeof(u_int)));
     Server::obj_lock.lock();
     int xy[] = {food->get_coord().x, food->get_coord().y};
     m_socket.write_some(buffer(xy, sizeof(xy)));
@@ -57,12 +59,14 @@ void Talker::read_dir(){
 }
 
 void Talker::send_now(){
+    // m_socket.write_some(buffer(&Server::SEND_NOW, sizeof(u_int)));
     auto since_epoch = Clock::now().time_since_epoch();
     int time_now = std::chrono::duration_cast<MS>(since_epoch).count();
     m_socket.write_some(buffer(&time_now, sizeof(int)));
 }
 
 void Talker::send_all_dirs(PServer serv){
+    m_socket.write_some(buffer(&Server::SEND_ALL_DIRS, sizeof(u_int)));
     u_int snakes_count = serv->snakes.size();
     int* buf = new int[snakes_count*2];
     m_socket.write_some(buffer(&snakes_count, sizeof(int)));
@@ -87,6 +91,7 @@ u_int Server::SEND_FOOD = 92029;
 u_int Server::CHANGE_DIR = 111122;
 u_int Server::HEAR = 8282;
 u_int Server::SEND_NOW = 22112;
+u_int Server::SEND_ALL_DIRS = 2122;
 u_int Server::END = 2212;
 
 mutex Server::obj_lock;
@@ -116,6 +121,9 @@ void Server::read_all(PTalker t, PServer serv){
 void Server::accept_all(PServer serv){
     Talker::acceptor acc(Talker::service, Talker::ep);
     while (true){
+        if (serv->talkers.size() >= 5){
+            this_thread::sleep_for(MS(1000));
+        }
         PTalker t = new Talker(read_all, serv);
         Talker::socket& sock = t->m_socket;
         acc.accept(t->m_socket);
@@ -184,9 +192,16 @@ void Server::loop(){
             this_thread::sleep_until(next_tick);
         }
         next_tick += tick_length;
+        current_step++;
         obj_lock.lock();
         for (auto it = snakes.begin(); it != snakes.end(); it++){
             (*it)->move();
+        }
+        if (Snake::colider.foods_size() > 0){
+            for (u_int i = 0 ; i < Snake::colider.foods_size(); i++){
+                write_all(Snake::colider.foods[i]);
+            }
+            Snake::colider.clear_food();
         }
         if (!lone_food->is_alive()){
             add_food();

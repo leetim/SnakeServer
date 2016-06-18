@@ -38,7 +38,7 @@ public:
     void add_food(PFood obj);
     void colide_all(PObject obj);
     void clear_dead();
-    void clear_dead_food();
+    void clear_food();
     PFood get_foods(int i);
     u_int size();
     u_int foods_size();
