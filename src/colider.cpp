@@ -55,6 +55,11 @@ void Colider::add_object(PObject obj){
     objects.push_back(obj);
 }
 
+void Colider::add_food(PFood obj){
+    foods.push_back(obj);
+    add_object(obj);
+}
+
 void Colider::colide_all(PObject obj){
     for (u_int i = 0; i < objects.size(); i++){
         if (!obj->is_alive()){
@@ -64,20 +69,36 @@ void Colider::colide_all(PObject obj){
     }
 }
 
+void Colider::clear_dead_food(){
+    vector<PFood> temp;
+    for (u_int i = 0; i < foods.size(); i++){
+        if (foods[i]->is_alive()){
+            temp.push_back(foods[i]);
+        }
+    }
+    foods = temp;
+}
+
 void Colider::clear_dead(){
+    clear_dead_food();
     vector<PObject> temp;
-    vector<PObject> dead;
     for (u_int i = 0; i < objects.size(); i++){
         if (objects[i]->is_alive()){
             temp.push_back(objects[i]);
         }
         else{
-            dead.push_back(objects[i]);
+            delete objects[i];
         }
     }
-    for (u_int i = 0; i < dead.size(); i++){
-        delete dead[i];
-    }
+}
+
+
+PFood Colider::get_foods(int i){
+    return foods[i];
+}
+
+u_int Colider::foods_size(){
+    return foods.size();
 }
 
 u_int Colider::size(){

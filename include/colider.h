@@ -35,9 +35,14 @@ class Colider{
 public:
     PObject operator[](int i);
     void add_object(PObject obj);
+    void add_food(PFood obj);
     void colide_all(PObject obj);
     void clear_dead();
+    void clear_dead_food();
+    PFood get_foods(int i);
     u_int size();
+    u_int foods_size();
+    std::vector<PFood> foods;
 private:
     std::vector<PObject> objects;
 };

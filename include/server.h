@@ -36,6 +36,7 @@ public:
     void send_food(PFood food);
     void read_dir();
     void send_now();
+    void send_all_dirs(PServer serv);
     void start();
 
 private:
@@ -47,6 +48,7 @@ private:
 
 class Server{
 public:
+    friend class Talker;
 
     static void read_all(PTalker t, PServer serv);
     static void accept_all(PServer serv);
@@ -58,6 +60,7 @@ public:
     void write_all(PFood new_food);
     void write_all_dirs();
     void add_snake();
+    void add_food();
 
     static u_int SNAKE_GAME;
     static u_int SEND_SNAKE;
@@ -76,10 +79,11 @@ public:
 
 private:
     Point get_clear_point(int max_x, int max_y);
+    void clear_talkers();
+    void clear_snakes();
 
     std::vector<PTalker> talkers;
     std::vector<PSnake> snakes;
-    std::vector<PFood> foods;
     PFood lone_food;
     u_llong current_step;
     Point map_rect;

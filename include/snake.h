@@ -22,6 +22,8 @@ public:
     u_int size();
     void move();
     void move_to(u_llong steps);
+    void kill();
+    bool is_alive();
 
 private:
     u_llong get_state_number();

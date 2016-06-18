@@ -56,9 +56,7 @@ void Snake::move(){
     }
     catch(KillSnake){
         if (!head->is_alive()){
-            for (u_int i = 0; i < fragments.size(); i++){
-                fragments[i]->kill();
-            }
+            kill();
         }
     }
 }
@@ -85,6 +83,19 @@ void Snake::move_to(u_llong step){
         fragments.clear();
         get_fragments(it.begin()+1, it.end(), it[0]);
     }
+}
+
+void Snake::kill(){
+    for (u_int i = 0; i < fragments.size(); i++){
+        fragments[i]->kill();
+        if (i%3 == 1){
+            colider.add_food(new Food(fragments[i]->get_coord()));
+        }
+    }
+}
+
+bool Snake::is_alive(){
+    return head->is_alive();
 }
 
 
