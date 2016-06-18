@@ -3,8 +3,11 @@
 #include <colider.h>
 #include <set>
 
+class Snake;
+
 typedef std::set<State> StateSet;
 typedef PointsVector::iterator PIterator;
+typedef Snake* PSnake;
 
 class Snake{
 public:
@@ -13,6 +16,8 @@ public:
     Snake(const Point& coord, const Point& dir, u_llong first_step);
     Snake(std::vector<Point>&& other, const Point& dir, u_llong first_step);
     Point get_head_coord();
+    Point get_dir();
+    void change_dir(const Point& new_dir);
     PObject operator[](int ind);
     u_int size();
     void move();

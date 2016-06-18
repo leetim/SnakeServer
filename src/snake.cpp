@@ -18,6 +18,13 @@ Point Snake::get_head_coord(){
     return head->get_coord();
 }
 
+Point Snake::get_dir(){
+    return head->get_dir();
+}
+void Snake::change_dir(const Point& new_dir){
+    head->change_dir(new_dir);
+}
+
 PObject Snake::operator[](int ind){
     return fragments[ind];
 }
@@ -63,8 +70,15 @@ void Snake::move_to(u_llong step){
         }
     }
     else{
-        State it = *states.find(step);
-        states.erase(states.find(step), states.end());
+        StateSet::iterator iter = states.find(State(step));
+        if (iter == states.end()){
+            for (u_int i = 0; i < fragments.size(); i++){
+                fragments[i]->kill();
+            }
+            return;
+        }
+        State it = *iter;
+        states.erase(iter, states.end());
         for (u_int i = 0; i < fragments.size(); i++){
             fragments[i]->kill();
         }
