@@ -1,5 +1,11 @@
 #pragma once
 
+struct MapPoint{
+	int x;
+	int y;
+	char c;
+};
+
 struct Point{
 	typedef Point& reference;
 	Point(): x(), y(){};

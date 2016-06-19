@@ -5,7 +5,7 @@ using namespace std;
 
 class MyArea: public Gtk::DrawingArea{
 public:
-    MyArea(PClient cl): client(cl){};
+    MyArea(){};
     ~MyArea(){};
 
     bool on_draw(const Cairo::RefPtr<Cairo::Context>& cr){  // This is where we draw on the window
@@ -19,7 +19,7 @@ public:
         // int yc = height / 20;
 
         cr->set_line_width(1);  // outline thickness changes                              // with window size
-        client->redraw(cr, sigc::mem_fun(*this, &MyArea::draw_rect2));
+        // client->redraw(cr, sigc::mem_fun(*this, &MyArea::draw_rect2));
 
         return true;
     }
@@ -64,12 +64,11 @@ public:
         }
     }
 
-    PClient client;
 };
 
 class GameForm: public Gtk::Window{
 public:
-    GameForm(): myArea(&client), client(500/sq_width, 500/sq_width){
+    GameForm(): myArea(){
         set_default_size(500, 500);
         set_border_width(0);
         signal_key_release_event().connect(sigc::mem_fun(*this, &GameForm::on_key_press));
@@ -79,7 +78,7 @@ public:
     };
 
     void loop(){
-        client.loop(sigc::mem_fun(myArea, &MyArea::force_redraw));
+
     }
     ~GameForm(){};
 
@@ -100,13 +99,11 @@ public:
             k = 3;
             break;
         }
-        client.send_all(k);
         myArea.force_redraw();
         return true;
     }
 private:
     MyArea myArea;
-    Client client;
     std::thread loop_thread;
 
 };

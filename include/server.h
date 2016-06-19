@@ -34,12 +34,8 @@ public:
     Talker(SendFunction read_all, PServer server);
     ~Talker();
     bool is_closed();
-    void send_snake(PSnake snake);
-    void send_food(PFood food);
-    void send_wall(PWall wall);
+    void send_all();
     void read_dir();
-    void send_now();
-    void send_all_dirs(PServer serv);
     void start();
 
 private:
@@ -55,25 +51,12 @@ public:
 
     static void read_all(PTalker t, PServer serv);
     static void accept_all(PServer serv);
-    static void write_all(PServer serv);
 
     Server(int height, int weidth);
     void loop();
-    void write_all(PSnake new_snake);
-    void write_all(PFood new_food);
-    void write_all_dirs();
+    void write_all();
     void add_snake();
     void add_food();
-
-    static u_int SNAKE_GAME;
-    static u_int SEND_SNAKE;
-    static u_int SEND_FOOD;
-    static u_int SEND_WALL;
-    static u_int CHANGE_DIR;
-    static u_int HEAR;
-    static u_int SEND_NOW;
-    static u_int END;
-    static u_int SEND_ALL_DIRS;
 
     static std::mutex obj_lock;
     static std::mutex talkers_lock;
@@ -83,9 +66,9 @@ public:
     static TimePoint next_tick;
 
 private:
-    Point get_clear_point(int max_x, int max_y);
     void clear_talkers();
     void clear_snakes();
+    Point get_clear_point(int max_x, int max_y);
 
     std::vector<PTalker> talkers;
     std::vector<PSnake> snakes;

@@ -7,8 +7,7 @@ using namespace std;
 
 int main(int argc, char* argv[]){
     srand(time(0));
-    Server c(40, 40);
-    cout << "lol2" << endl;
-    c.loop();
+    Server server(40, 40);
+    server.loop();
 	return 0;
 }
