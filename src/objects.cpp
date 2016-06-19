@@ -1,6 +1,7 @@
 #include <objects.h>
 #include <stdlib.h>
 #include <acts.h>
+#include <iostream>
 
 ////////////////////////////////////////////////////////////////////////////////
 //Head
@@ -8,6 +9,7 @@
 Head::Head(const Point& _coord, const Point& _dir){
     coord = _coord;
     dir = _dir;
+    alive = true;
 }
 
 void Head::move(){
@@ -15,7 +17,7 @@ void Head::move(){
 }
 
 void Head::colide(PObject other){
-    if (other->coord != coord){
+    if (other->coord != coord + dir){
         return;
     }
     other->colide(this);
@@ -37,6 +39,7 @@ void Head::colide(PHead other){
 Body::Body(const Point& _coord, PObject _next){
     coord = _coord;
     next = _next;
+    alive = true;
 }
 
 void Body::move(){
@@ -63,7 +66,10 @@ void Food::colide(PHead other){
 ////////////////////////////////////////////////////////////////////////////////
 //Wall
 
-Wall::Wall(const Point& _coord){}
+Wall::Wall(const Point& _coord){
+    coord = _coord;
+}
+
 void Wall::colide(PHead other){
     other->alive = false;
     throw KillSnake();

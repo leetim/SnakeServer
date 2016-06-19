@@ -40,7 +40,7 @@ Point& Point::operator=(const Point& other){
 	return *this;
 }
 
-int Point::len2(){
+int Point::len2() const{
 	return x*x + y*y;
 }
 
@@ -55,6 +55,10 @@ Point operator+(const Point& l, const Point& r){
 
 Point operator-(const Point& l, const Point& r){
 	return Point(l.x - r.x, l.y - r.y);
+}
+
+Point operator/(const Point& l, const int& right){
+	return Point(l.x/right, l.y/right);
 }
 
 bool operator==(const Point& l, const Point& r){

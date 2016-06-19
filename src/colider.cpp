@@ -4,16 +4,14 @@ using namespace std;
 
 ////////////////////////////////////////////////////////////////////////////////
 //State
-State::State(int num): number(num){
-    points = new PointsVector;
-}
+State::State(): number(){}
 
-State::~State(){
-    delete points;
-}
+State::State(int num): number(num){}
+
+State::State(const State& other): points(other.points), number(other.number){}
 
 void State::add_point(const Point& new_point){
-    points->push_back(new_point);
+    points.push_back(new_point);
 }
 
 u_llong State::get_number(){
@@ -21,19 +19,19 @@ u_llong State::get_number(){
 }
 
 Point State::operator[](int i){
-    return points->at(i);
+    return points.at(i);
 }
 
 u_int State::size(){
-    return points->size();
+    return points.size();
 }
 
 State::iterator State::begin(){
-    return points->begin();
+    return points.begin();
 }
 
 State::iterator State::end(){
-    return points->end();
+    return points.end();
 }
 
 bool operator<(const State& left, const State& right){
@@ -60,6 +58,11 @@ void Colider::add_food(PFood obj){
     add_object(obj);
 }
 
+void Colider::add_wall(PWall obj){
+    walls.push_back(obj);
+    add_object(obj);
+}
+
 void Colider::colide_all(PObject obj){
     for (u_int i = 0; i < objects.size(); i++){
         if (!obj->is_alive()){
@@ -83,6 +86,7 @@ void Colider::clear_dead(){
             delete objects[i];
         }
     }
+    objects = temp;
 }
 
 

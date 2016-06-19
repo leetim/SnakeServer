@@ -1,5 +1,6 @@
 #include <server.h>
 #include <stdlib.h>
+#include <iostream>
 
 using namespace std;
 using namespace asio;
@@ -18,6 +19,7 @@ read_thread(read_all, this, server){
 
 Talker::~Talker(){
     m_socket.close();
+    mySnake->kill();
 }
 
 bool Talker::is_closed(){
@@ -26,7 +28,7 @@ bool Talker::is_closed(){
 
 void Talker::send_snake(PSnake snake){
     m_socket.write_some(buffer(&Server::SEND_SNAKE, sizeof(u_int)));
-    Server::obj_lock.lock();
+    // Server::obj_lock.lock();
     u_int length = (snake->size()+1)*2;
     int* buf = new int[length];
     buf[0] = snake->get_dir().x;
@@ -38,24 +40,33 @@ void Talker::send_snake(PSnake snake){
     m_socket.write_some(buffer(&length, sizeof(u_int)));
     m_socket.write_some(buffer(buf, length*sizeof(int)));
     delete[] buf;
-    Server::obj_lock.unlock();
+    // Server::obj_lock.unlock();
 }
 
 void Talker::send_food(PFood food){
     m_socket.write_some(buffer(&Server::SEND_FOOD, sizeof(u_int)));
-    Server::obj_lock.lock();
+    // Server::obj_lock.lock();
     int xy[] = {food->get_coord().x, food->get_coord().y};
     m_socket.write_some(buffer(xy, sizeof(xy)));
-    Server::obj_lock.unlock();
+    // Server::obj_lock.unlock();
+}
+
+void Talker::send_wall(PWall wall){
+    m_socket.write_some(buffer(&Server::SEND_WALL, sizeof(u_int)));
+    // Server::obj_lock.lock();
+    int xy[] = {wall->get_coord().x, wall->get_coord().y};
+    m_socket.write_some(buffer(xy, sizeof(xy)));
+    // Server::obj_lock.unlock();
 }
 
 void Talker::read_dir(){
     int xy[2];
-    m_socket.write_some(buffer(xy, sizeof(xy)));
+    m_socket.read_some(buffer(xy, sizeof(xy)));
+    cout << "done: " << xy[0] << " " << xy[1] << endl;
     Point dir(xy[0], xy[1]);
-    Server::obj_lock.lock();
+    // Server::obj_lock.lock();
     mySnake->change_dir(dir);
-    Server::obj_lock.unlock();
+    // Server::obj_lock.unlock();
 }
 
 void Talker::send_now(){
@@ -88,6 +99,7 @@ void Talker::start(){
 u_int Server::SNAKE_GAME = 10002;
 u_int Server::SEND_SNAKE = 7827;
 u_int Server::SEND_FOOD = 92029;
+u_int Server::SEND_WALL = 92922;
 u_int Server::CHANGE_DIR = 111122;
 u_int Server::HEAR = 8282;
 u_int Server::SEND_NOW = 22112;
@@ -98,23 +110,32 @@ mutex Server::obj_lock;
 mutex Server::talkers_lock;
 mutex Server::out_lock;
 
-MS Server::tick_length = MS(1000);
+MS Server::tick_length = MS(400);
 TimePoint Server::next_tick = TimePoint(Clock::now() + tick_length);
 
 void Server::read_all(PTalker t, PServer serv){
     while (!t->ready){
-        this_thread::sleep_for(MS(1000));
+        this_thread::sleep_for(tick_length);
     }
-    u_int buf[1024];
+    u_int comand;
     Talker::socket& sock = t->m_socket;
-    while (!t->is_closed()){
-        sock.read_some(buffer(buf, 1024*sizeof(int)));
-        if (*buf == CHANGE_DIR){
-            t->read_dir();
-            serv->write_all_dirs();
-        }
-        // if ()
+    try{
+        while (!t->is_closed()){
+            cout << "ready" << endl;
+            sock.read_some(buffer(&comand, sizeof(u_int)));
+            // obj_lock.lock();
+            if (comand == CHANGE_DIR){
+                t->read_dir();
+                serv->write_all_dirs();
+            }
+            // obj_lock.unlock();
+            // if ()
 
+        }
+    }
+    catch(...){
+        sock.close();
+        return;
     }
 }
 
@@ -122,13 +143,14 @@ void Server::accept_all(PServer serv){
     Talker::acceptor acc(Talker::service, Talker::ep);
     while (true){
         if (serv->talkers.size() >= 5){
-            this_thread::sleep_for(MS(1000));
+            this_thread::sleep_for(tick_length);
         }
         PTalker t = new Talker(read_all, serv);
         Talker::socket& sock = t->m_socket;
         acc.accept(t->m_socket);
         try{
             obj_lock.lock();
+            cout << this_thread::get_id() << endl;
             serv->add_snake();
             t->mySnake = serv->snakes.back();
             for (auto i = serv->snakes.begin(); i != serv->snakes.end(); i++){
@@ -140,12 +162,18 @@ void Server::accept_all(PServer serv){
                 t->send_food(*i);
             }
             sock.write_some(buffer(&END, sizeof(u_int)));
+            for (auto i = Snake::colider.walls.begin(); i != Snake::colider.walls.end(); i++){
+                t->send_wall(*i);
+            }
+            sock.write_some(buffer(&END, sizeof(u_int)));
+
             t->send_now();
             obj_lock.unlock();
             talkers_lock.lock();
             serv->write_all(t->mySnake);
             serv->talkers.push_back(t);
             t->start();
+            cout << "Client has been connected" << endl;
             talkers_lock.unlock();
         }
         catch(int){
@@ -172,37 +200,43 @@ void Server::write_all_dirs(){
     }
 }
 
-Server::Server(int height, int width){
+Server::Server(int height, int width): current_step(){
     map_rect = Point(width, height);
     for (int i = -1; i <= width; i++){
-        Snake::colider.add_object(new Wall(Point(i, -1)));
-        Snake::colider.add_object(new Wall(Point(i, height)));
+        Snake::colider.add_wall(new Wall(Point(i, -1)));
+        Snake::colider.add_wall(new Wall(Point(i, height)));
     }
     for (int i = 0; i < height; i++){
-        Snake::colider.add_object(new Wall(Point(-1, i)));
-        Snake::colider.add_object(new Wall(Point(width, i)));
+        Snake::colider.add_wall(new Wall(Point(-1, i)));
+        Snake::colider.add_wall(new Wall(Point(width, i)));
     }
     add_food();
 }
 
 void Server::loop(){
     std::thread accepter_thread(accept_all, this);
+    accepter_thread.detach();
+    next_tick = Clock::now();
+    cout << "Server start" << endl;
     while (true){
-        while (next_tick > Clock::now()){
+        while (next_tick >= Clock::now()){
             this_thread::sleep_until(next_tick);
         }
         next_tick += tick_length;
         current_step++;
+        cout << current_step << " step " << talkers.size() << " " << snakes.size() << endl;
         obj_lock.lock();
         for (auto it = snakes.begin(); it != snakes.end(); it++){
             (*it)->move();
+            Point p = (*it)->get_head_coord();
+            cout << p.x << " " << p.y << endl;
         }
-        if (Snake::colider.foods_size() > 0){
-            for (u_int i = 0 ; i < Snake::colider.foods_size(); i++){
-                write_all(Snake::colider.foods[i]);
-            }
-            Snake::colider.clear_food();
-        }
+        // if (Snake::colider.foods_size() > 0){
+        //     for (u_int i = 0 ; i < Snake::colider.foods_size(); i++){
+        //         write_all(Snake::colider.foods[i]);
+        //     }
+        //     Snake::colider.clear_food();
+        // }
         if (!lone_food->is_alive()){
             add_food();
             write_all(lone_food);
@@ -255,6 +289,7 @@ void Server::clear_snakes(){
         }
     }
     snakes = temp;
+    // cout << "clear snakes" << endl;
 }
 
 Point Server::get_clear_point(int max_x, int max_y){

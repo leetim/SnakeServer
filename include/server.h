@@ -1,11 +1,13 @@
 #pragma once
 
+#define BOOST_ASIO_ENABLE_HANDLER_TRACKING
 #include <thread>
 #include <asio.hpp>
 #include <mutex>
 #include <chrono>
 #include <queue>
 #include <snake.h>
+#include <ncurses.h>
 
 class Talker;
 class Server;
@@ -34,6 +36,7 @@ public:
     bool is_closed();
     void send_snake(PSnake snake);
     void send_food(PFood food);
+    void send_wall(PWall wall);
     void read_dir();
     void send_now();
     void send_all_dirs(PServer serv);
@@ -65,6 +68,7 @@ public:
     static u_int SNAKE_GAME;
     static u_int SEND_SNAKE;
     static u_int SEND_FOOD;
+    static u_int SEND_WALL;
     static u_int CHANGE_DIR;
     static u_int HEAR;
     static u_int SEND_NOW;

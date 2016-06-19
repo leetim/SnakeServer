@@ -1,5 +1,7 @@
 #include <snake.h>
 
+using namespace std;
+
 Colider Snake::colider;
 
 Snake::Snake(const Point& coord, const Point& dir, u_llong first_step){
@@ -22,6 +24,10 @@ Point Snake::get_dir(){
     return head->get_dir();
 }
 void Snake::change_dir(const Point& new_dir){
+    Point dir = head->get_dir();
+    if (dir == new_dir || new_dir == -dir || new_dir.len2() != 1){
+        return;
+    }
     head->change_dir(new_dir);
 }
 
@@ -43,9 +49,6 @@ void Snake::move(){
     if (states.size() > 20){
         states.erase(states.begin());
     }
-    for (auto i = fragments.rbegin(); i != fragments.rend(); i++){
-        (*i)->move();
-    }
     try{
         colider.colide_all(head);
     }
@@ -57,7 +60,11 @@ void Snake::move(){
     catch(KillSnake){
         if (!head->is_alive()){
             kill();
+            return;
         }
+    }
+    for (auto i = fragments.rbegin(); i != fragments.rend(); i++){
+        (*i)->move();
     }
 }
 
@@ -108,6 +115,7 @@ u_llong Snake::get_state_number(){
 void Snake::get_fragments(PIterator begin, PIterator end, const Point& dir){
     head = new Head(*begin, dir);
     fragments.reserve((end - begin)*3/2);
+    colider.add_object(head);
     fragments.push_back(head);
     for (auto i = begin+1; i != end; i++){
         PObject t = new Body(*i, fragments.back());

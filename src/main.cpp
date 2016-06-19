@@ -1,10 +1,14 @@
 #include <iostream>
-#include <colider.h>
+#include <client.h>
+#include <server.h>
+#include <ncurses.h>
+
 using namespace std;
 
 int main(int argc, char* argv[]){
-    auto t1 = State(4);
-    auto t2 = State(5);
-    cout << (t1 < t2) << endl;
-    return 0;
+    srand(time(0));
+    Server c(40, 40);
+    cout << "lol2" << endl;
+    c.loop();
+	return 0;
 }

@@ -7,7 +7,7 @@ struct Point{
 	Point(const Point& other);
 	reference operator=(const Point& other);
 	Point operator-();
-	int len2();
+	int len2() const;
 
 	static Point randomPoint(int max_x, int max_y);
 	static Point dirByCode(int code);
@@ -18,6 +18,7 @@ struct Point{
 
 	friend Point operator+(const Point& left, const Point& right);
 	friend Point operator-(const Point& left, const Point& right);
+	friend Point operator/(const Point& left, const int& right);
 	friend bool operator==(const Point& left, const Point& right);
 	friend bool operator!=(const Point& left, const Point& right);
 	//Семантика данных функций не совсем очивидна, смотрите код object.cpp

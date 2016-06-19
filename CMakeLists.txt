@@ -8,14 +8,20 @@ set(CMAKE_EXE_LINKER_FLAGS "-pthread -lncurses")
 
 SET(Boost_USE_STATIC_LIBS ON)
 # SET(Boost_USE_MULTITHREAD ON)
+find_package(PkgConfig)
+PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
+
 FIND_PACKAGE(Boost 1.42.0 REQUIRED COMPONENTS system thread regex)
-INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ./include)
-LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
+INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS} ${GTKMM_INCLUDE_DIRS} ./include)
+LINK_DIRECTORIES(${Boost_LIBRARY_DIRS} ${GTKMM_LIBRARY_DIRS})
+ADD_DEFINITIONS(${GTKMM_CFLAGS_OTHER})
 
 SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY})
 
-set(USED_SOURCE src/main.cpp src/Point.cpp src/colider.cpp src/bot.cpp
-   src/client.cpp src/objects.cpp src/server.cpp src/snake.cpp)
+set(USED_SOURCE src/Point.cpp src/colider.cpp src/bot.cpp src/client.cpp
+  src/objects.cpp src/server.cpp src/snake.cpp)
 
-add_executable(main ${USED_SOURCE})
-target_link_libraries(main ncurses ${USED_LIBS})
+add_executable(main src/main.cpp ${USED_SOURCE})
+add_executable(gtk example_gtk.cpp ${USED_SOURCE})
+target_link_libraries(gtk ncurses ${USED_LIBS} ${GTKMM_LIBRARIES})
+target_link_libraries(main ncurses ${USED_LIBS} ${GTKMM_LIBRARIES})
