@@ -34,6 +34,22 @@ Point Point::dirByCode(int code){
 	}
 }
 
+int Point::codeByDir(const Point& p){
+	if (p == dir_left){
+		return 0;
+	}
+	if (p == dir_top){
+		return 1;
+	}
+	if (p == dir_right){
+		return 2;
+	}
+	if (p == dir_bottom){
+		return 3;
+	}
+	return -1;
+}
+
 Point& Point::operator=(const Point& other){
 	x = other.x;
 	y = other.y;

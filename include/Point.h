@@ -19,6 +19,7 @@ struct Point{
 
 	static Point randomPoint(int max_x, int max_y);
 	static Point dirByCode(int code);
+	static int codeByDir(const Point& p);
 	static const Point dir_top;
 	static const Point dir_right;
 	static const Point dir_bottom;

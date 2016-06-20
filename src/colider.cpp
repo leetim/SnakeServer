@@ -82,9 +82,6 @@ void Colider::clear_dead(){
         if (objects[i]->is_alive()){
             temp.push_back(objects[i]);
         }
-        else{
-            delete objects[i];
-        }
     }
     objects = temp;
 }

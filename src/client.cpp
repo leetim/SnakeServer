@@ -32,7 +32,7 @@ public:
         int xc = width / sq_width;
         int yc = height / sq_width;
         cr->set_line_width(1);  // outline thickness changes
-
+        printf("%d %d\n", xc, yc);
         for (int x = 0; x < xc; x++){
             cr->move_to(x*sq_width, 0);
             cr->line_to(x*sq_width, height);
@@ -49,7 +49,7 @@ public:
             draw_rect2(cr, p.x - per.x, p.y - per.y, p.c);
         }
         points_lock.unlock();
-
+        cout << "redraw " << length << endl;
         return true;
     }
 
@@ -103,35 +103,31 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 //GameForm
 
-class GameForm: public Gtk::ApplicationWindow{
+class GameForm: public Gtk::Window{
 public:
     typedef asio::ip::tcp::endpoint endpoint;
     typedef asio::ip::tcp tcp;
     typedef asio::ip::tcp::acceptor acceptor;
     typedef asio::ip::tcp::socket socket;
 
-    GameForm(): myArea(), service(), ep(tcp::v4(), 18008), m_socket(service), started(){
+    GameForm(): myArea(), service(), ep(tcp::v4(), 18008), m_socket(service){
         set_default_size(500, 500);
         set_border_width(0);
         signal_key_release_event().connect(sigc::mem_fun(*this, &GameForm::on_key_press));
         add(myArea);
-        myArea.show();
+        m_socket.connect(ep);
         loop_thread = std::thread(sigc::mem_fun(*this, &GameForm::read_all));
         loop_thread.detach();
+        myArea.show();
     };
 
-    void start(){
-        m_socket.connect(ep);
-        started = true;
-    }
-
     void read_all(){
-        while (!started){}
         try{
-            while (m_socket.is_open()){
+            while (true){
                 char mes[4];
                 m_socket.read_some(buffer(mes, 4));
                 if (string(mes) == "BY"){
+                    cout << "BY" << endl;
                     throw 2;
                 }
 
@@ -182,7 +178,6 @@ private:
     endpoint ep;
     socket m_socket;
     std::thread loop_thread;
-    bool started;
 };
 
 
@@ -193,6 +188,5 @@ int main(int argc, char* argv[]){
 
     GameForm window;
     // Gtk::Window window;
-    window.start();
     return app->run(window);
 }

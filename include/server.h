@@ -10,7 +10,7 @@
 class Talker;
 class Server;
 
-typedef Talker* PTalker;
+typedef std::shared_ptr<Talker> PTalker;
 typedef Server* PServer;
 typedef void (*SendFunction)(PTalker, PServer);
 typedef std::chrono::high_resolution_clock Clock;

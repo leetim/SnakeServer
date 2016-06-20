@@ -20,7 +20,7 @@ void Head::colide(PObject other){
     if (other->coord != coord + dir){
         return;
     }
-    other->colide(this);
+    other->colide(PHead(this));
 }
 
 void Head::colide(PHead other){

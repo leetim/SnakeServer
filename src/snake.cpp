@@ -5,7 +5,7 @@ using namespace std;
 Colider Snake::colider;
 
 Snake::Snake(const Point& coord, const Point& dir, u_llong first_step){
-    head = new Head(coord, dir);
+    head = PHead(new Head(coord, dir));
     colider.add_object(head);
     fragments.push_back(head);
     state_number = first_step;
@@ -26,6 +26,9 @@ Point Snake::get_dir(){
     return head->get_dir();
 }
 void Snake::change_dir(const Point& new_dir){
+    if (!alive){
+        return;
+    }
     Point dir = head->get_dir();
     if (dir == new_dir || new_dir == -dir || new_dir.len2() != 1){
         return;
@@ -42,6 +45,9 @@ u_int Snake::size(){
 }
 
 void Snake::move(){
+    if (!alive){
+        return;
+    }
     State s(get_state_number());
     s.add_point(head->get_dir());
     for (auto i = fragments.begin(); i != fragments.end(); i++){
@@ -55,7 +61,7 @@ void Snake::move(){
         colider.colide_all(head);
     }
     catch(KillFood){
-        PObject t = new Body(fragments.back()->get_coord(), fragments.back());
+        PObject t = PObject(new Body(fragments.back()->get_coord(), fragments.back()));
         fragments.push_back(t);
         colider.add_object(t);
     }
@@ -102,7 +108,7 @@ void Snake::kill(){
     for (u_int i = 0; i < fragments.size(); i++){
         fragments[i]->kill();
         if (i%3 == 1){
-            colider.add_food(new Food(fragments[i]->get_coord()));
+            colider.add_food(PFood(new Food(fragments[i]->get_coord())));
         }
     }
 }
@@ -119,12 +125,12 @@ u_llong Snake::get_state_number(){
 }
 
 void Snake::get_fragments(PIterator begin, PIterator end, const Point& dir){
-    head = new Head(*begin, dir);
+    head = PHead(new Head(*begin, dir));
     fragments.reserve((end - begin)*3/2);
     colider.add_object(head);
     fragments.push_back(head);
     for (auto i = begin+1; i != end; i++){
-        PObject t = new Body(*i, fragments.back());
+        PObject t = PObject(new Body(*i, fragments.back()));
         colider.add_object(t);
         fragments.push_back(t);
     }

@@ -1,6 +1,7 @@
 #pragma once
 #include <Point.h>
 #include <acts.h>
+#include <memory>
 
 class Object;
 class Head;
@@ -8,11 +9,11 @@ class Body;
 class Food;
 class Wall;
 
-typedef Object* PObject;
-typedef Head* PHead;
-typedef Body* PBody;
-typedef Food* PFood;
-typedef Wall* PWall;
+typedef std::shared_ptr<Object> PObject;
+typedef std::shared_ptr<Head> PHead;
+typedef std::shared_ptr<Body> PBody;
+typedef std::shared_ptr<Food> PFood;
+typedef std::shared_ptr<Wall> PWall;
 typedef unsigned int u_int;
 typedef unsigned long long u_llong;
 

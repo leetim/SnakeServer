@@ -7,7 +7,7 @@ class Snake;
 
 typedef std::set<State> StateSet;
 typedef PointsVector::iterator PIterator;
-typedef Snake* PSnake;
+typedef std::shared_ptr<Snake> PSnake;
 
 class Snake{
 public:

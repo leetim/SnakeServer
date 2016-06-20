@@ -11,10 +11,9 @@ using namespace asio;
 Talker::endpoint Talker::ep(Talker::tcp::v4(), 18008);
 io_service Talker::service;
 
-Talker::Talker(SendFunction read_all, PServer server): m_socket(service),
-read_thread(read_all, this, server){
+Talker::Talker(SendFunction read_all, PServer server):  ready(false), m_socket(service),
+read_thread(read_all, PTalker(this), server){
     read_thread.detach();
-    ready = false;
     closed_flag = false;
 }
 
@@ -27,6 +26,7 @@ Talker::~Talker(){
     }
     m_socket.close();
     mySnake->kill();
+    // delete mySnake;
 }
 
 bool Talker::is_closed(){
@@ -55,7 +55,8 @@ void Talker::send_all(MapPoint* buf, u_int length){
         return;
     }
     try{
-        m_socket.write_some(buffer("OK"));
+        char mes[4] = "OK";
+        m_socket.write_some(buffer(mes, 4));
         buf[1].x = mySnake->get_head_coord().x;
         buf[1].y = mySnake->get_head_coord().y;
         m_socket.write_some(buffer(buf, length*sizeof(MapPoint)));
@@ -84,11 +85,8 @@ void Server::read_all(PTalker t, PServer serv){
     while (!t->ready){
         this_thread::sleep_for(tick_length);
     }
-    // u_int comand;
-    // Talker::socket& sock = t->m_socket;
     try{
         while (!t->is_closed()){
-            // sock.read_some(buffer(&comand, sizeof(u_int)))
             t->read_dir();
             this_thread::sleep_for(tick_length);
         }
@@ -103,26 +101,31 @@ void Server::read_all(PTalker t, PServer serv){
 void Server::accept_all(PServer serv){
     Talker::acceptor acc(Talker::service, Talker::ep);
     while (true){
-        if (serv->talkers.size() >= 5){
-            this_thread::sleep_for(tick_length);
-            continue;
+        try{
+            if (serv->talkers.size() >= 5){
+                this_thread::sleep_for(tick_length);
+                continue;
+            }
+            PTalker t = PTalker(new Talker(read_all, serv));
+            acc.accept(t->m_socket);
+            obj_lock.lock();
+            talkers_lock.lock();
+
+            cout << "Client connect..." << endl;
+            t->m_socket.set_option(asio::ip::tcp::socket::reuse_address(true));
+
+            serv->add_snake();
+            t->mySnake = serv->snakes.back();
+            t->start();
+            serv->talkers.push_back(t);
+            cout << "Client connected" << endl;
+
+            talkers_lock.unlock();
+            obj_lock.unlock();
         }
-        PTalker t = new Talker(read_all, serv);
-        acc.accept(t->m_socket);
-        t->m_socket.set_option(asio::ip::tcp::socket::reuse_address(true));
-        cout << t->m_socket.is_open();
-        obj_lock.lock();
-        talkers_lock.lock();
+        catch(...){
 
-        serv->add_snake();
-        t->mySnake = serv->snakes.back();
-        t->start();
-        serv->talkers.push_back(t);
-        // serv->write_all();
-        cout << "Client connected" << endl;
-
-        talkers_lock.unlock();
-        obj_lock.unlock();
+        }
     }
 }
 
@@ -147,12 +150,12 @@ void Server::write_all(){
 Server::Server(int height, int width): current_step(){
     map_rect = Point(width, height);
     for (int i = -1; i <= width; i++){
-        Snake::colider.add_wall(new Wall(Point(i, -1)));
-        Snake::colider.add_wall(new Wall(Point(i, height)));
+        Snake::colider.add_wall(PWall(new Wall(Point(i, -1))));
+        Snake::colider.add_wall(PWall(new Wall(Point(i, height))));
     }
     for (int i = 0; i < height; i++){
-        Snake::colider.add_wall(new Wall(Point(-1, i)));
-        Snake::colider.add_wall(new Wall(Point(width, i)));
+        Snake::colider.add_wall(PWall(new Wall(Point(-1, i))));
+        Snake::colider.add_wall(PWall(new Wall(Point(width, i))));
     }
     add_food();
 }
@@ -168,8 +171,9 @@ void Server::loop(){
         }
         next_tick += tick_length;
         current_step++;
-        cout << current_step << " step " << talkers.size() << " " << snakes.size() << endl;
         obj_lock.lock();
+        talkers_lock.lock();
+
         for (auto it = snakes.begin(); it != snakes.end(); it++){
             (*it)->move();
             Point p = (*it)->get_head_coord();
@@ -178,12 +182,12 @@ void Server::loop(){
         if (!lone_food->is_alive()){
             add_food();
         }
-        talkers_lock.lock();
-        clear_talkers();
-        talkers_lock.unlock();
+        cout << current_step << " step " << talkers.size() << " " << snakes.size() << endl;
         clear_snakes();
+        clear_talkers();
         Snake::colider.clear_dead();
         write_all();
+        talkers_lock.unlock();
         obj_lock.unlock();
         // out_lock.unlock();
 
@@ -193,13 +197,13 @@ void Server::loop(){
 void Server::add_snake(){
     Point pos = get_clear_point(map_rect.x, map_rect.y);
     Point dir = Point::dirByCode(rand()%4);
-    PSnake s = new Snake(pos, dir, current_step);
+    PSnake s = PSnake(new Snake(pos, dir, current_step));
     snakes.push_back(s);
 }
 
 void Server::add_food(){
     Point pos = get_clear_point(map_rect.x, map_rect.y);
-    PFood f = new Food(pos);
+    PFood f = PFood(new Food(pos));
     Snake::colider.add_object(f);
     lone_food = f;
 }
@@ -210,7 +214,7 @@ void Server::clear_talkers(){
     temp.reserve(talkers.capacity());
     for (auto it = talkers.begin(); it != talkers.end(); it++){
         if ((*it)->is_closed() || !(*it)->mySnake->is_alive()){
-            delete *it;
+            // delete *it;
         }
         else{
             temp.push_back(*it);
@@ -224,7 +228,7 @@ void Server::clear_snakes(){
     temp.reserve(snakes.capacity());
     for (auto it = snakes.begin(); it != snakes.end(); it++){
         if (!(*it)->is_alive()){
-            delete *it;
+            // delete *it;
         }
         else{
             temp.push_back(*it);
