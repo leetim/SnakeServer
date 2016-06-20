@@ -6,6 +6,8 @@ struct MapPoint{
 	char c;
 };
 
+typedef MapPoint* PMapPoint;
+
 struct Point{
 	typedef Point& reference;
 	Point(): x(), y(){};

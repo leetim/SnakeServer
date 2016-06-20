@@ -7,7 +7,7 @@ set(CMAKE_EXE_LINKER_FLAGS "-pthread -lncurses")
 
 
 SET(Boost_USE_STATIC_LIBS ON)
-SET(Boost_USE_MULTITHREAD ON)
+# SET(Boost_USE_MULTITHREAD ON)
 find_package(PkgConfig)
 PKG_CHECK_MODULES(GTKMM REQUIRED gtkmm-3.0)
 
@@ -18,10 +18,12 @@ ADD_DEFINITIONS(${GTKMM_CFLAGS_OTHER})
 
 SET(USED_LIBS ${Boost_SYSTEM_LIBRARY} ${Boost_THREAD_LIBRARY} ${Boost_REGEX_LIBRARY})
 
-set(USED_SOURCE src/Point.cpp src/colider.cpp src/bot.cpp
+set(USED_SOURCE src/Point.cpp src/colider.cpp
   src/objects.cpp src/server.cpp src/snake.cpp)
 
-add_executable(main src/main.cpp ${USED_SOURCE})
-add_executable(client example_gtk.cpp  src/Point.cpp)
+add_executable(server src/main.cpp ${USED_SOURCE})
+add_executable(client src/client.cpp  src/Point.cpp)
+add_executable(bot src/bot.cpp  src/Point.cpp)
 target_link_libraries(client ${USED_LIBS} ${GTKMM_LIBRARIES})
-target_link_libraries(main ${USED_LIBS} ${GTKMM_LIBRARIES})
+target_link_libraries(server ${USED_LIBS} ${GTKMM_LIBRARIES})
+target_link_libraries(bot ${USED_LIBS} ${GTKMM_LIBRARIES})

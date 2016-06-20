@@ -5,9 +5,7 @@
 #include <asio.hpp>
 #include <mutex>
 #include <chrono>
-#include <queue>
 #include <snake.h>
-#include <ncurses.h>
 
 class Talker;
 class Server;
@@ -34,12 +32,14 @@ public:
     Talker(SendFunction read_all, PServer server);
     ~Talker();
     bool is_closed();
-    void send_all();
+    void close();
+    void send_all(MapPoint* points, u_int length);
     void read_dir();
     void start();
 
 private:
     bool ready;
+    bool closed_flag;
     PSnake mySnake;
     socket m_socket;
     std::thread read_thread;

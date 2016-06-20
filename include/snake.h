@@ -31,5 +31,6 @@ private:
     StateSet states;
     ObjVector fragments;
     PHead head;
+    bool alive;
     u_llong state_number;
 };

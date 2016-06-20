@@ -15,36 +15,55 @@ Talker::Talker(SendFunction read_all, PServer server): m_socket(service),
 read_thread(read_all, this, server){
     read_thread.detach();
     ready = false;
+    closed_flag = false;
 }
 
 Talker::~Talker(){
+    try{
+        m_socket.write_some(buffer("BY"));
+    }
+    catch(...){
+
+    }
     m_socket.close();
     mySnake->kill();
 }
 
 bool Talker::is_closed(){
-    return !m_socket.is_open();
+    return closed_flag;
 }
 
+void Talker::close(){
+    closed_flag = true;
+}
+
+
 void Talker::read_dir(){
+    // Server::out_lock.lock();
     int xy[2];
-    m_socket.read_some(buffer(xy, sizeof(xy)));
+    m_socket.read_some(buffer(xy, sizeof(xy)));;
+    Server::obj_lock.lock();
     cout << "done: " << xy[0] << " " << xy[1] << endl;
     Point dir(xy[0], xy[1]);
     mySnake->change_dir(dir);
+    // mySnake->move();
+    Server::obj_lock.unlock();
 }
 
-void Talker::send_all(){
-    u_int length = Snake::colider.size();
-    m_socket.write_some(buffer(&length, sizeof(u_int)));
-    MapPoint* points = new MapPoint[length];
-    for (u_int i = 0; i < Snake::colider.size(); i++){
-        PObject o = Snake::colider[i];
-        points[i].x = o->get_coord().x;
-        points[i].y = o->get_coord().y;
-        points[i].c = o->get_char();
+void Talker::send_all(MapPoint* buf, u_int length){
+    if (!ready){
+        return;
     }
-    m_socket.write_some(buffer(points, length*sizeof(MapPoint)));
+    try{
+        m_socket.write_some(buffer("OK"));
+        buf[1].x = mySnake->get_head_coord().x;
+        buf[1].y = mySnake->get_head_coord().y;
+        m_socket.write_some(buffer(buf, length*sizeof(MapPoint)));
+    }
+    catch(...){
+        cout << "sended error" << endl;
+        close();
+    }
 }
 
 void Talker::start(){
@@ -58,24 +77,26 @@ mutex Server::obj_lock;
 mutex Server::talkers_lock;
 mutex Server::out_lock;
 
-MS Server::tick_length = MS(400);
+MS Server::tick_length = MS(100);
 TimePoint Server::next_tick = TimePoint(Clock::now() + tick_length);
 
 void Server::read_all(PTalker t, PServer serv){
     while (!t->ready){
         this_thread::sleep_for(tick_length);
     }
-    u_int comand;
-    Talker::socket& sock = t->m_socket;
+    // u_int comand;
+    // Talker::socket& sock = t->m_socket;
     try{
         while (!t->is_closed()){
-            sock.read_some(buffer(&comand, sizeof(u_int)));
+            // sock.read_some(buffer(&comand, sizeof(u_int)))
             t->read_dir();
+            this_thread::sleep_for(tick_length);
         }
     }
     catch(...){
-        sock.close();
-        return;
+        cout << "read error" << endl;
+        t->close();
+        obj_lock.unlock();
     }
 }
 
@@ -84,26 +105,41 @@ void Server::accept_all(PServer serv){
     while (true){
         if (serv->talkers.size() >= 5){
             this_thread::sleep_for(tick_length);
+            continue;
         }
         PTalker t = new Talker(read_all, serv);
         acc.accept(t->m_socket);
-        try{
-            obj_lock.lock();
-            talkers_lock.lock();
-            serv->talkers.push_back(t);
-            serv->add_snake();
-            talkers_lock.unlock();
-            obj_lock.unlock();
-        }
-        catch(int){
-            delete t;
-        }
+        t->m_socket.set_option(asio::ip::tcp::socket::reuse_address(true));
+        cout << t->m_socket.is_open();
+        obj_lock.lock();
+        talkers_lock.lock();
+
+        serv->add_snake();
+        t->mySnake = serv->snakes.back();
+        t->start();
+        serv->talkers.push_back(t);
+        // serv->write_all();
+        cout << "Client connected" << endl;
+
+        talkers_lock.unlock();
+        obj_lock.unlock();
     }
 }
 
 void Server::write_all(){
+    MapPoint buf[1602];
+    u_int* length = (u_int*)buf;
+    MapPoint* points = &buf[2];
+
+    *length = Snake::colider.size();
+    for (u_int i = 0; i < Snake::colider.size(); i++){
+        PObject o = Snake::colider[i];
+        points[i].x = o->get_coord().x;
+        points[i].y = o->get_coord().y;
+        points[i].c = o->get_char();
+    }
     for (auto it = talkers.begin(); it != talkers.end(); it++){
-        (*it)->send_all();
+        (*it)->send_all(buf, *length+2);
     }
 }
 
@@ -142,11 +178,15 @@ void Server::loop(){
         if (!lone_food->is_alive()){
             add_food();
         }
+        talkers_lock.lock();
         clear_talkers();
+        talkers_lock.unlock();
         clear_snakes();
         Snake::colider.clear_dead();
         write_all();
         obj_lock.unlock();
+        // out_lock.unlock();
+
     }
 }
 

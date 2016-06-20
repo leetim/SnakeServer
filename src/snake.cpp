@@ -9,11 +9,13 @@ Snake::Snake(const Point& coord, const Point& dir, u_llong first_step){
     colider.add_object(head);
     fragments.push_back(head);
     state_number = first_step;
+    alive = true;
 }
 
 Snake::Snake(std::vector<Point>&& other, const Point& dir, u_llong first_step){
     get_fragments(other.begin(), other.end(), dir);
     state_number = first_step;
+    alive = true;
 }
 
 Point Snake::get_head_coord(){
@@ -93,6 +95,10 @@ void Snake::move_to(u_llong step){
 }
 
 void Snake::kill(){
+    if (!is_alive()){
+        return;
+    }
+    alive = false;
     for (u_int i = 0; i < fragments.size(); i++){
         fragments[i]->kill();
         if (i%3 == 1){
@@ -102,7 +108,7 @@ void Snake::kill(){
 }
 
 bool Snake::is_alive(){
-    return head->is_alive();
+    return alive;
 }
 
 
