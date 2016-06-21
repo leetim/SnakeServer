@@ -63,16 +63,19 @@ public:
     float get_risk(const MapPoint& other){
         float len2 = Point(pos.x - other.x, pos.y - other.y).len2();
         const char& c = other.c;
+        if (len2 == 1){
+            return 3E40*((c=='%')?-1:1);
+        }
         switch (c)
         {
         case '&':
             return 1600/len2;
             break;
         case 'o':
-            return 0;
+            return -1600/len2;
             break;
         case '%':
-            return 1600;
+            return 1600/len2;
             break;
         case '#':
             return -1600/len2;

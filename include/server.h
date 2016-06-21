@@ -10,7 +10,7 @@
 class Talker;
 class Server;
 
-typedef std::shared_ptr<Talker> PTalker;
+typedef Talker* PTalker;
 typedef Server* PServer;
 typedef void (*SendFunction)(PTalker, PServer);
 typedef std::chrono::high_resolution_clock Clock;
@@ -29,7 +29,7 @@ public:
     static asio::io_service service;
     static endpoint ep;
 
-    Talker(SendFunction read_all, PServer server);
+    Talker();
     ~Talker();
     bool is_closed();
     void close();
@@ -42,14 +42,13 @@ private:
     bool closed_flag;
     PSnake mySnake;
     socket m_socket;
-    std::thread read_thread;
 };
 
 class Server{
 public:
     friend class Talker;
 
-    static void read_all(PTalker t, PServer serv);
+    static void read_all(PServer serv);
     static void accept_all(PServer serv);
 
     Server(int height, int weidth);

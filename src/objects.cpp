@@ -20,16 +20,12 @@ void Head::colide(PObject other){
     if (other->coord != coord + dir){
         return;
     }
-    other->colide(PHead(this));
+    std::cout << 123 << std::endl;
+    other->colide(this);
 }
 
 void Head::colide(PHead other){
-    if (rand()%2){
-        other->alive = false;
-    }
-    else{
-        this->alive = false;
-    }
+    other->alive = false;
     throw KillSnake();
 }
 

@@ -5,9 +5,8 @@
 
 class Snake;
 
-typedef std::set<State> StateSet;
 typedef PointsVector::iterator PIterator;
-typedef std::shared_ptr<Snake> PSnake;
+typedef Snake* PSnake;
 
 class Snake{
 public:
@@ -21,14 +20,12 @@ public:
     PObject operator[](int ind);
     u_int size();
     void move();
-    void move_to(u_llong steps);
     void kill();
     bool is_alive();
 
 private:
     u_llong get_state_number();
     void get_fragments(PIterator begin, PIterator end, const Point& dir);
-    StateSet states;
     ObjVector fragments;
     PHead head;
     bool alive;
